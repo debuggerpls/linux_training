@@ -1,0 +1,80 @@
+From 76ba184200b4a60411be3483205d1607d4778079 Mon Sep 17 00:00:00 2001
+From: Deividas P <ngivingup@gmail.com>
+Date: Mon, 28 Dec 2020 23:05:43 +0100
+Subject: [PATCH] Greeting module that prints greeting message on init and
+ elapsed time on exit.
+
+Signed-off-by: Deividas P <ngivingup@gmail.com>
+---
+ drivers/misc/Kconfig         |  5 +++++
+ drivers/misc/Makefile        |  1 +
+ drivers/misc/hello_version.c | 32 ++++++++++++++++++++++++++++++++
+ 3 files changed, 38 insertions(+)
+ create mode 100644 drivers/misc/hello_version.c
+
+diff --git a/drivers/misc/Kconfig b/drivers/misc/Kconfig
+index ce136d685d14..62c932cec500 100644
+--- a/drivers/misc/Kconfig
++++ b/drivers/misc/Kconfig
+@@ -456,6 +456,11 @@ config PVPANIC
+ 	  a paravirtualized device provided by QEMU; it lets a virtual machine
+ 	  (guest) communicate panic events to the host.
+ 
++config HELLO_VERSION
++	tristate "hello version support"
++	help
++	  Simple greeting module from bootlin linux-kernel labs.
++
+ source "drivers/misc/c2port/Kconfig"
+ source "drivers/misc/eeprom/Kconfig"
+ source "drivers/misc/cb710/Kconfig"
+diff --git a/drivers/misc/Makefile b/drivers/misc/Makefile
+index c7bd01ac6291..d99b31528036 100644
+--- a/drivers/misc/Makefile
++++ b/drivers/misc/Makefile
+@@ -57,3 +57,4 @@ obj-$(CONFIG_PVPANIC)   	+= pvpanic.o
+ obj-$(CONFIG_HABANA_AI)		+= habanalabs/
+ obj-$(CONFIG_UACCE)		+= uacce/
+ obj-$(CONFIG_XILINX_SDFEC)	+= xilinx_sdfec.o
++obj-$(CONFIG_HELLO_VERSION)	+= hello_version.o
+diff --git a/drivers/misc/hello_version.c b/drivers/misc/hello_version.c
+new file mode 100644
+index 000000000000..0aeb1eff5f73
+--- /dev/null
++++ b/drivers/misc/hello_version.c
+@@ -0,0 +1,32 @@
++// SPDX-License-Identifier: GPL-2.0
++#include <linux/init.h>
++#include <linux/module.h>
++#include <linux/utsname.h>
++#include <linux/timekeeping32.h>
++
++static char *who = "Deividas";
++module_param(who, charp, 0644);
++MODULE_PARM_DESC(who, "Recipient of greeting message");
++
++static unsigned long start_time;
++
++static int __init hello_init(void)
++{
++	pr_alert("Hello %s. You are currently using Linux %s.\n", who,
++		 init_uts_ns.name.release);
++	start_time = get_seconds();
++	return 0;
++}
++
++static void __exit hello_exit(void)
++{
++	pr_alert("Goodbye %s. Elapsed time: %lus\n", who,
++		 get_seconds() - start_time);
++}
++
++module_init(hello_init);
++module_exit(hello_exit);
++
++MODULE_LICENSE("GPL");
++MODULE_DESCRIPTION("Greeting module");
++MODULE_AUTHOR("Deividas Puplauskas");
+-- 
+2.17.1
+
