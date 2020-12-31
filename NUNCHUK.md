@@ -114,3 +114,19 @@ i2cdetect -r 1
 * General rule: whenever the symbol you’re looking for is defined in `arch/<arch>/include/asm/<file>.h`, you can include `linux/<file>.h` in your kernel code.
 
 * Nunchuk updates state of its internal registers only when they have been read.
+
+* Rebuild kernel with static support event interface support (CONFIG_INPUT_EVDEV). 
+
+* In _probe(): Devlare and allocate `struct input_dev` using device managed allocation (`devm_`). Then register the input device `input_register_device()`. Then add input device registration information (name, id.bustype, set_bit()).
+
+* Setup polling routine with `input_setup_polling()`. Because polling function gets `input_dev` pointer, that points to the logical device and not `i2c_client`, we need to add private data that holds required information using `input_set_drvdata`. Then just read nunchuk registers and post  the events and notify input core (`input_event()` then `input_sync()`).
+
+* Test input interface using `evtest`.
+
+* To expose joystic X and Y coordinates through the input device, recompile kernel with support for joystick interface (CONFIG_INPUT_JOYDEV). Then add ABS_X and ABS_Y to input->absbit, as well as configure `input_set_abs_params()`. Lastly declare classic buttons. 
+
+ 
+
+TODO:
+* Support for multiple devices
+
